@@ -7,25 +7,31 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  * gemini-1.5-flash-8b → fallback 2 (smallest, highest quota headroom)
  */
 const MODEL_CHAIN = [
+  "gemini-3.5-flash",
+  "gemini-1.5-flash-8b",
   "gemini-2.0-flash",
   "gemini-1.5-flash",
-  "gemini-1.5-flash-8b",
 ];
 
 /**
- * Returns true when the error is a retryable server / quota error.
+ * Returns true when the error is a retryable server, quota, or model configuration/support error.
+ * For robust hackathon fallback, we want to try the next model on any 503, 429, 404 or network errors.
  */
 function isRetryableError(error) {
   const msg = (error?.message || "").toLowerCase();
   return (
     msg.includes("503") ||
     msg.includes("429") ||
+    msg.includes("404") ||
+    msg.includes("not found") ||
+    msg.includes("supported") ||
     msg.includes("overloaded") ||
     msg.includes("high demand") ||
     msg.includes("quota") ||
     msg.includes("rate limit") ||
     msg.includes("resource exhausted") ||
-    msg.includes("unavailable")
+    msg.includes("unavailable") ||
+    msg.includes("fetch")
   );
 }
 
