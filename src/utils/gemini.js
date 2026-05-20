@@ -7,10 +7,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  * gemini-1.5-flash-8b → fallback 2 (smallest, highest quota headroom)
  */
 const MODEL_CHAIN = [
-  "gemini-3.5-flash",
-  "gemini-1.5-flash-8b",
   "gemini-2.0-flash",
-  "gemini-1.5-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-2.5-flash-lite",
 ];
 
 /**
@@ -155,8 +154,12 @@ export const generateTravelItinerary = async (formData, apiKey) => {
     try {
       return await tryModel(genAI, modelName, prompt);
     } catch (err) {
-      const msg = err?.message || String(err);
-      console.warn(`[TripGenius] ❌ ${modelName} failed: ${msg}`);
+      let msg = err?.message || String(err);
+      // Redact the API key just in case it is part of the error message
+      if (activeKey) {
+        msg = msg.split(activeKey).join("[HIDDEN_API_KEY]");
+      }
+      console.error(`[TripGenius] ❌ ${modelName} failed: ${msg}`);
       errors.push({ model: modelName, error: msg });
 
       // Only retry next model on retryable errors (503/429/quota)
