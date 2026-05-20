@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Bookmark, BookmarkCheck, Copy, Check, MapPin, AlertCircle, ShoppingBag, Lightbulb, Phone, Sparkles, Map } from 'lucide-react';
 import DayCard from './DayCard';
 import BudgetBreakdown from './BudgetBreakdown';
+import WeatherCard from './WeatherCard';
 import { getMapsLink, getGoogleMapsEmbedUrl, capitalize } from '../utils/helpers';
 
 export default function ItineraryCard({ itineraryData, formData, onSave, isSaved }) {
@@ -322,6 +323,9 @@ ${itineraryData.foodSuggestions?.map(f => `- ${f.dish} (Try at: ${f.where})`).jo
           </div>
         </div>
       )}
+
+      {/* Weather Forecast */}
+      <WeatherCard destination={formData.destination} />
 
       {/* Budget Breakdown */}
       {itineraryData.budgetBreakdown && (
