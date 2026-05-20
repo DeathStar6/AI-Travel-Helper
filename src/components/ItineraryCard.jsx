@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Bookmark, BookmarkCheck, Copy, Check, MapPin, AlertCircle, ShoppingBag, Lightbulb, Phone, Sparkles, Map } from 'lucide-react';
 import DayCard from './DayCard';
 import BudgetBreakdown from './BudgetBreakdown';
-import { getMapsLink, getGoogleMapsEmbedUrl } from '../utils/helpers';
+import { getMapsLink, getGoogleMapsEmbedUrl, capitalize } from '../utils/helpers';
 
 export default function ItineraryCard({ itineraryData, formData, onSave, isSaved }) {
   const [copied, setCopied] = useState(false);

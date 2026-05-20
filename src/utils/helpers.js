@@ -1,4 +1,14 @@
 /**
+ * Capitalizes each word in a string (title case)
+ * @param {string} str - The string to capitalize
+ * @returns {string} Title-cased string
+ */
+export const capitalize = (str) => {
+  if (!str) return '';
+  return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+};
+
+/**
  * Generates a Google Maps search URL for a given place and destination
  * @param {string} place - The place or attraction name
  * @param {string} destination - The city or country of the trip
