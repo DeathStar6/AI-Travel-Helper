@@ -6,9 +6,15 @@ export default function SavedTrips({ trips, onSelectTrip, onDeleteTrip, activeTr
 
   const handleCopySummary = (trip) => {
     const { destination, formData, itineraryData } = trip;
+    const transitText = itineraryData.transitOptions && itineraryData.transitOptions.length > 0
+      ? `\n✈️ Transit Options from ${formData.startingCity || 'starting city'}:\n` +
+        itineraryData.transitOptions.map(t => `- ${t.type}: ${t.name} (Duration: ${t.duration} | Cost: ${t.costRange})`).join('\n')
+      : '';
+
     const text = `✈️ TRIPGENIUS AI ITINERARY: ${destination.toUpperCase()}
 📅 Duration: ${formData.numDays} Days (${formData.month})
 👤 Style: ${formData.travelStyle} | 💰 Budget: ${formData.budgetType}
+${transitText}
 
 🌟 Trip Summary:
 ${itineraryData.tripSummary}

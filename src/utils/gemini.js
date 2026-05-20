@@ -41,6 +41,16 @@ Respond strictly with a single JSON object matching this structure:
   "tripSummary": "A concise overview of what makes this trip special for a ${formData.travelStyle} trip focused on ${interestsString}",
   "highlights": ["highlight 1", "highlight 2", "highlight 3"],
   "bestTimeToVisit": "Best months/season to visit with brief reason why",
+  "transitOptions": [
+    {
+      "type": "Flight / Train / Bus / Drive",
+      "name": "Name of service or route details (e.g., Shatabdi Express 12002, IndiGo 6E-241)",
+      "duration": "Estimated duration (e.g., 4h 30m)",
+      "costRange": "Estimated cost in INR (e.g., ₹1,200 - ₹2,500)",
+      "frequency": "e.g., Daily, Hourly, Weekly",
+      "bookingTip": "Useful tip for booking or boarding"
+    }
+  ],
   "itinerary": [
     {
       "day": 1,

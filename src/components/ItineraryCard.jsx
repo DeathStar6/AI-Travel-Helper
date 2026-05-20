@@ -8,21 +8,27 @@ export default function ItineraryCard({ itineraryData, formData, onSave, isSaved
   const [copied, setCopied] = useState(false);
 
   const handleCopySummary = () => {
+    const transitText = itineraryData.transitOptions && itineraryData.transitOptions.length > 0
+      ? `\n✈️ Transit Options from ${formData.startingCity || 'starting city'}:\n` +
+        itineraryData.transitOptions.map(t => `- ${t.type}: ${t.name} (Duration: ${t.duration} | Cost: ${t.costRange})`).join('\n')
+      : '';
+
     const text = `✈️ TRIPGENIUS AI ITINERARY: ${formData.destination.toUpperCase()}
 📅 Duration: ${formData.numDays} Days (${formData.month})
 👤 Style: ${formData.travelStyle} | 💰 Budget: ${formData.budgetType}
+${transitText}
 
 🌟 Trip Summary:
 ${itineraryData.tripSummary}
 
 🏛️ Top Attractions:
-${itineraryData.topAttractions.map(a => `- ${a.name}: ${a.description} (Entry: ${a.entryFee})`).join('\n')}
+${itineraryData.topAttractions?.map(a => `- ${a.name}: ${a.description} (Entry: ${a.entryFee})`).join('\n')}
 
 🍜 Local Food Suggestions:
-${itineraryData.foodSuggestions.map(f => `- ${f.dish} (Try at: ${f.where})`).join('\n')}
+${itineraryData.foodSuggestions?.map(f => `- ${f.dish} (Try at: ${f.where})`).join('\n')}
 
 💵 Total Estimated Budget:
-₹${itineraryData.budgetBreakdown.total} INR
+₹${itineraryData.budgetBreakdown?.total} INR
 `.trim();
 
     navigator.clipboard.writeText(text);
@@ -130,6 +136,57 @@ ${itineraryData.foodSuggestions.map(f => `- ${f.dish} (Try at: ${f.where})`).joi
           </ul>
         </div>
       </div>
+
+      {/* Transit / Transport Options */}
+      {itineraryData.transitOptions && itineraryData.transitOptions.length > 0 && (
+        <div className="glass-panel rounded-3xl p-6 border border-slate-800/80 space-y-4">
+          <h3 className="text-base font-bold text-slate-100 font-display flex items-center gap-2 pl-1">
+            ✈️ Getting to {formData.destination} from {formData.startingCity || 'starting point'}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {itineraryData.transitOptions.map((option, index) => {
+              const typeLower = option.type?.toLowerCase() || '';
+              let icon = "🚂";
+              if (typeLower.includes("flight") || typeLower.includes("plane")) icon = "✈️";
+              else if (typeLower.includes("bus")) icon = "🚌";
+              else if (typeLower.includes("car") || typeLower.includes("drive") || typeLower.includes("taxi")) icon = "🚗";
+
+              return (
+                <div key={index} className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-700/80 transition-all duration-300 flex flex-col justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-semibold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 mb-1.5 uppercase font-mono">
+                      <span>{icon}</span>
+                      {option.type}
+                    </span>
+                    <h4 className="text-sm font-bold text-slate-200 leading-snug">{option.name}</h4>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 text-[10px] md:text-[11px] border-t border-slate-800/50 pt-2.5">
+                    <div>
+                      <span className="text-slate-500 block font-medium">Duration</span>
+                      <span className="text-slate-350 font-semibold">{option.duration}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block font-medium">Est. Cost</span>
+                      <span className="text-emerald-400 font-semibold">{option.costRange}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block font-medium">Frequency</span>
+                      <span className="text-slate-350 font-semibold">{option.frequency}</span>
+                    </div>
+                  </div>
+
+                  {option.bookingTip && (
+                    <p className="text-[10px] text-indigo-300/90 leading-normal bg-indigo-950/20 rounded-lg p-2 border border-indigo-900/10">
+                      💡 <strong>Tip:</strong> {option.bookingTip}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Daily Itinerary */}
       <div className="space-y-4">
