@@ -11,6 +11,18 @@ export const getMapsLink = (place, destination) => {
 };
 
 /**
+ * Generates a Google Maps embed URL for iframe previews
+ * @param {string} place - The place or attraction name
+ * @param {string} destination - The city or country of the trip
+ * @returns {string} Google Maps embed URL
+ */
+export const getGoogleMapsEmbedUrl = (place, destination = '') => {
+  if (!place) return '';
+  const query = encodeURIComponent(`${place} ${destination}`.trim());
+  return `https://www.google.com/maps?q=${query}&output=embed`;
+};
+
+/**
  * Formats a budget number into the specified currency
  * @param {number} amount - The amount to format
  * @param {string} currency - The currency code (default: INR)

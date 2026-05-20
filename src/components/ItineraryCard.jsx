@@ -1,11 +1,34 @@
-import React, { useState } from 'react';
-import { Bookmark, BookmarkCheck, Copy, Check, MapPin, AlertCircle, ShoppingBag, Lightbulb, Phone, Sparkles } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Bookmark, BookmarkCheck, Copy, Check, MapPin, AlertCircle, ShoppingBag, Lightbulb, Phone, Sparkles, Map } from 'lucide-react';
 import DayCard from './DayCard';
 import BudgetBreakdown from './BudgetBreakdown';
-import { getMapsLink } from '../utils/helpers';
+import { getMapsLink, getGoogleMapsEmbedUrl } from '../utils/helpers';
 
 export default function ItineraryCard({ itineraryData, formData, onSave, isSaved }) {
   const [copied, setCopied] = useState(false);
+  const [mapPreviewPlace, setMapPreviewPlace] = useState(null);
+
+  // Build a list of all mappable places for the preview switcher
+  const mapPlaces = useMemo(() => {
+    const places = [];
+    // Attractions first
+    itineraryData.topAttractions?.forEach(a => {
+      if (a.name) places.push(a.name);
+    });
+    // Then itinerary places
+    itineraryData.itinerary?.forEach(day => {
+      [day.morning, day.afternoon, day.evening].forEach(slot => {
+        if (slot?.place && !places.includes(slot.place)) places.push(slot.place);
+      });
+      if (day.accommodation?.name && !places.includes(day.accommodation.name)) {
+        places.push(day.accommodation.name);
+      }
+    });
+    return places;
+  }, [itineraryData]);
+
+  // The place currently shown in the map embed
+  const activeMapPlace = mapPreviewPlace || mapPlaces[0] || null;
 
   const handleCopySummary = () => {
     const transitText = itineraryData.transitOptions && itineraryData.transitOptions.length > 0
@@ -256,6 +279,49 @@ ${itineraryData.foodSuggestions?.map(f => `- ${f.dish} (Try at: ${f.where})`).jo
           </div>
         </div>
       </div>
+
+      {/* Google Maps Preview */}
+      {activeMapPlace && (
+        <div className="glass-panel rounded-3xl p-6 border border-slate-800/80 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h3 className="text-base font-bold text-slate-100 font-display flex items-center gap-2">
+              <Map className="w-5 h-5 text-indigo-400" />
+              Map Preview
+            </h3>
+            <div className="flex items-center gap-2">
+              <select
+                value={activeMapPlace}
+                onChange={(e) => setMapPreviewPlace(e.target.value)}
+                className="text-xs bg-slate-900 border border-slate-800 text-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-indigo-500 transition-colors max-w-[220px] truncate"
+              >
+                {mapPlaces.map((place, i) => (
+                  <option key={i} value={place}>{place}</option>
+                ))}
+              </select>
+              <a
+                href={getMapsLink(activeMapPlace, formData.destination)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:text-indigo-200 hover:bg-indigo-600/30 text-xs font-semibold transition-all whitespace-nowrap"
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                Open in Maps
+              </a>
+            </div>
+          </div>
+          <div className="rounded-2xl overflow-hidden border border-slate-800/80">
+            <iframe
+              title={`Map of ${activeMapPlace}`}
+              src={getGoogleMapsEmbedUrl(activeMapPlace, formData.destination)}
+              className="w-full h-[240px] md:h-[300px]"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Budget Breakdown */}
       {itineraryData.budgetBreakdown && (

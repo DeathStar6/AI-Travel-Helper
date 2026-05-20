@@ -95,7 +95,14 @@ export default function DayCard({ dayData, destination, defaultOpen = false }) {
                 </div>
                 <div>
                   <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 block leading-none mb-1">Night stay recommendation</span>
-                  <span className="text-sm font-semibold text-slate-200">{accommodation.name}</span>
+                  <a
+                    href={getMapsLink(accommodation.name, destination)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-semibold text-indigo-300 hover:text-indigo-200 underline decoration-indigo-500/40 hover:decoration-indigo-300 transition-colors"
+                  >
+                    {accommodation.name}
+                  </a>
                   {accommodation.type && (
                     <span className="text-[11px] text-slate-400 ml-2 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800">
                       {accommodation.type}

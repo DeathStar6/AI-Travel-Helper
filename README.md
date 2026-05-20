@@ -9,16 +9,18 @@
 1. **Intelligent Travel Form:** Choose destination, starting city, length of stay (1-14 days), travel companions (Solo, Couple, Family, etc.), budget tier (Budget, Mid-range, Luxury), local interests (Adventure, Culture, Food, etc.), and month of travel.
 2. **Google Gemini AI Integration:** Leverages `gemini-3.5-flash` in strict JSON mode to build detailed daily plans, including morning, afternoon, and evening slots.
 3. **Interactive Timelines & Accordions:** Beautiful responsive cards with expand/collapse options to inspect daily activities.
-4. **Google Maps Search Integrations:** Direct links mapping every attraction or point of interest dynamically.
+4. **Google Maps Integration:** Direct search links on every attraction, itinerary place, and accommodation. Interactive embedded map preview with a location switcher to explore any place on the itinerary.
 5. **Local Expense Visualizer:** Displays estimated budgets across categories (Accommodation, Food, Transit, Activities, Miscellaneous) with percentage charts.
 6. **Smart Library Storage:** Instantly save generated plans to your browser's `localStorage` for offline review. Actions include **View**, **Delete**, and **Copy Summary** (which parses the plan to copy to your clipboard).
 7. **Dynamic API Key Manager:** Fallback inputs in the header let users paste their Gemini API key directly into browser cache if environment variables aren't present.
 
 ---
 
-## 🛠️ Google Technology Used
+## 🛠️ Google Technologies Used
 
 * **Google Gemini API (`@google/generative-ai`):** Used to orchestrate structured JSON results. The app utilizes `responseMimeType: "application/json"` with customized system instructions to guarantee a strict JSON output matching the front-end layout requirements.
+* **Google Maps Search Links:** Every attraction, itinerary place, and accommodation links directly to Google Maps for instant navigation and exploration.
+* **Google Maps Embedded Preview:** An interactive iframe-based map preview card lets users visually explore locations from within the app, with a dropdown to switch between all places in the itinerary.
 
 ---
 
