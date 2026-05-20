@@ -49,10 +49,10 @@ ${itineraryData.foodSuggestions?.map(f => `- ${f.dish} (Try at: ${f.where})`).jo
               <span>Itinerary Generated</span>
             </div>
             <h2 className="text-3xl font-extrabold text-slate-100 font-display">
-              {formData.destination}
+              {capitalize(formData.destination)}
             </h2>
             <p className="text-sm text-slate-400 mt-1">
-              Starting from <strong className="text-slate-350">{formData.startingCity || 'your starting point'}</strong> &bull; {formData.numDays} Days in {formData.month}
+              Starting from <strong className="text-slate-355">{capitalize(formData.startingCity) || 'your starting point'}</strong> &bull; {formData.numDays} Days in {formData.month}
             </p>
             
             {/* Meta Tags */}
@@ -141,7 +141,7 @@ ${itineraryData.foodSuggestions?.map(f => `- ${f.dish} (Try at: ${f.where})`).jo
       {itineraryData.transitOptions && itineraryData.transitOptions.length > 0 && (
         <div className="glass-panel rounded-3xl p-6 border border-slate-800/80 space-y-4">
           <h3 className="text-base font-bold text-slate-100 font-display flex items-center gap-2 pl-1">
-            ✈️ Getting to {formData.destination} from {formData.startingCity || 'starting point'}
+            ✈️ Getting to {capitalize(formData.destination)} from {capitalize(formData.startingCity) || 'starting point'}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {itineraryData.transitOptions.map((option, index) => {
@@ -152,7 +152,7 @@ ${itineraryData.foodSuggestions?.map(f => `- ${f.dish} (Try at: ${f.where})`).jo
               else if (typeLower.includes("car") || typeLower.includes("drive") || typeLower.includes("taxi")) icon = "🚗";
 
               return (
-                <div key={index} className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-700/80 transition-all duration-300 flex flex-col justify-between gap-3">
+                <div key={index} className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-705 transition-all duration-300 flex flex-col justify-between gap-3">
                   <div>
                     <span className="text-[10px] bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-semibold px-2 py-0.5 rounded-md inline-flex items-center gap-1.5 mb-1.5 uppercase font-mono">
                       <span>{icon}</span>
@@ -167,7 +167,7 @@ ${itineraryData.foodSuggestions?.map(f => `- ${f.dish} (Try at: ${f.where})`).jo
                       <span className="text-slate-350 font-semibold">{option.duration}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500 block font-medium">Est. Cost</span>
+                      <span className="text-slate-500 block font-medium">Approx. Cost</span>
                       <span className="text-emerald-400 font-semibold">{option.costRange}</span>
                     </div>
                     <div>
