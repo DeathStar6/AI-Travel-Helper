@@ -8,6 +8,9 @@ import SavedTrips from './components/SavedTrips';
 import { useTrips } from './hooks/useTrips';
 import { generateTravelItinerary } from './utils/gemini';
 import { DEMO_FORM_DATA, createDemoTripPlan } from './utils/demoItinerary';
+import AuthButton from './components/AuthButton';
+import { auth } from './utils/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
   const [apiKey, setApiKey] = useState(
@@ -22,6 +25,16 @@ export default function App() {
   const [error, setError] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
   const [lastFormData, setLastFormData] = useState(null);
+  const [user, setUser] = useState(null);
+  
+  useEffect(() => {
+    if (auth) {
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+      });
+      return () => unsubscribe();
+    }
+  }, []);
   
   const formRef = useRef(null);
   const itineraryRef = useRef(null);
@@ -152,6 +165,8 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
+            <AuthButton user={user} />
+
             {!apiKey && (
               <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-rose-455 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-lg">
                 <AlertTriangle className="w-3.5 h-3.5" />
@@ -300,13 +315,23 @@ export default function App() {
         </div>
 
         {/* Saved Trips Section */}
-        <div className="pt-6 border-t border-slate-900/60">
-          <SavedTrips
-            trips={trips}
-            onSelectTrip={handleSelectTrip}
-            onDeleteTrip={handleDeleteTrip}
-            activeTripId={activeTripId}
-          />
+        <div className="pt-6 border-t border-slate-900/60 relative">
+          {!user && (
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-950 px-4">
+              <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5 border border-slate-800/80 rounded-full px-3 py-1 bg-slate-900/50 shadow-sm">
+                <Info className="w-3.5 h-3.5 text-indigo-400" />
+                Sign in to keep your travel plans organized.
+              </span>
+            </div>
+          )}
+          <div className={!user ? "mt-4" : ""}>
+            <SavedTrips
+              trips={trips}
+              onSelectTrip={handleSelectTrip}
+              onDeleteTrip={handleDeleteTrip}
+              activeTripId={activeTripId}
+            />
+          </div>
         </div>
       </main>
 
