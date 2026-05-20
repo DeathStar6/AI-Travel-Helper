@@ -7,7 +7,7 @@ import ItineraryCard from './components/ItineraryCard';
 import SavedTrips from './components/SavedTrips';
 import { useTrips } from './hooks/useTrips';
 import { generateTravelItinerary } from './utils/gemini';
-import { DEMO_FORM_DATA, DEMO_ITINERARY } from './utils/demoItinerary';
+import { DEMO_FORM_DATA, createDemoTripPlan } from './utils/demoItinerary';
 
 export default function App() {
   const [apiKey, setApiKey] = useState(
@@ -81,13 +81,14 @@ export default function App() {
 
   const handleLoadDemo = () => {
     setError(null);
+    const fallbackData = lastFormData || DEMO_FORM_DATA;
     setActiveItinerary({
-      formData: lastFormData || DEMO_FORM_DATA,
-      itineraryData: DEMO_ITINERARY,
+      formData: fallbackData,
+      itineraryData: createDemoTripPlan(fallbackData),
     });
     setActiveTripId(null);
     scrollToItinerary();
-    showToast('Loaded demo itinerary (Jaipur, 3 days)');
+    showToast(`Loaded fallback itinerary for ${fallbackData.destination}`);
   };
 
   const handleSaveItinerary = () => {
