@@ -1,33 +1,44 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
- * Generates a travel itinerary from Gemini API
- * @param {Object} formData - Form input values
- * @param {string} apiKey - Optional manual API key override
- * @returns {Promise<Object>} Generated itinerary JSON object
+ * Ordered list of models to try. The first available model wins.
+ * gemini-2.0-flash  → primary (fast, free-tier friendly)
+ * gemini-1.5-flash  → fallback 1
+ * gemini-1.5-flash-8b → fallback 2 (smallest, highest quota headroom)
  */
-export const generateTravelItinerary = async (formData, apiKey) => {
-  const activeKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY;
+const MODEL_CHAIN = [
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+];
 
-  if (!activeKey) {
-    throw new Error("API_KEY_MISSING");
-  }
+/**
+ * Returns true when the error is a retryable server / quota error.
+ */
+function isRetryableError(error) {
+  const msg = (error?.message || "").toLowerCase();
+  return (
+    msg.includes("503") ||
+    msg.includes("429") ||
+    msg.includes("overloaded") ||
+    msg.includes("high demand") ||
+    msg.includes("quota") ||
+    msg.includes("rate limit") ||
+    msg.includes("resource exhausted") ||
+    msg.includes("unavailable")
+  );
+}
 
-  try {
-    const genAI = new GoogleGenerativeAI(activeKey);
-    // Use gemini-3.5-flash for fast and cost-effective text generation
-    const model = genAI.getGenerativeModel({
-      model: "gemini-3.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
-    });
-
-    const interestsString = formData.interests && formData.interests.length > 0 
-      ? formData.interests.join(", ") 
+/**
+ * Build the prompt once; reused across retries.
+ */
+function buildPrompt(formData) {
+  const interestsString =
+    formData.interests && formData.interests.length > 0
+      ? formData.interests.join(", ")
       : "General Sightseeing";
 
-    const prompt = `
+  return `
 Generate a detailed travel itinerary for a trip to ${formData.destination} starting from ${formData.startingCity || 'their starting location'}.
 Trip parameters:
 - Duration: ${formData.numDays} days
@@ -91,28 +102,70 @@ Important Instructions:
 3. The budgetBreakdown total must be the sum of accommodation, food, transport, activities, and misc. All these values must be integers.
 4. Do not include any markdown styling wrappers like \`\`\`json. Return a pure JSON string.
 `;
+}
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      systemInstruction: "You are an expert AI Travel Planner. Always respond in valid, strict JSON format matching the schema requested. Never include text outside the JSON object.",
-    });
+/**
+ * Try a single model. Returns parsed JSON on success, throws on failure.
+ */
+async function tryModel(genAI, modelName, prompt) {
+  console.log(`[TripGenius] Trying model: ${modelName}`);
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      responseMimeType: "application/json",
+    },
+  });
 
-    const responseText = result.response.text();
-    
-    // Safely parse JSON response
-    try {
-      const parsedData = JSON.parse(responseText);
-      return parsedData;
-    } catch (parseError) {
-      console.error("Failed to parse JSON response from Gemini:", responseText);
-      throw new Error("INVALID_JSON_RESPONSE");
-    }
-  } catch (error) {
-    console.error("Gemini API generation error:", error);
-    if (error.message === "API_KEY_MISSING" || error.message === "INVALID_JSON_RESPONSE") {
-      throw error;
-    }
-    // Propagate the actual error message
-    throw new Error(error.message || "NETWORK_OR_API_ERROR");
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    systemInstruction:
+      "You are an expert AI Travel Planner. Always respond in valid, strict JSON format matching the schema requested. Never include text outside the JSON object.",
+  });
+
+  const responseText = result.response.text();
+  const parsed = JSON.parse(responseText);
+  console.log(`[TripGenius] ✅ Success with model: ${modelName}`);
+  return parsed;
+}
+
+/**
+ * Generates a travel itinerary, automatically cycling through fallback models.
+ * @param {Object} formData - Form input values
+ * @param {string} apiKey - Optional manual API key override
+ * @returns {Promise<Object>} Generated itinerary JSON object
+ */
+export const generateTravelItinerary = async (formData, apiKey) => {
+  const activeKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY;
+
+  if (!activeKey) {
+    throw new Error("API_KEY_MISSING");
   }
+
+  const genAI = new GoogleGenerativeAI(activeKey);
+  const prompt = buildPrompt(formData);
+  const errors = [];
+
+  for (const modelName of MODEL_CHAIN) {
+    try {
+      return await tryModel(genAI, modelName, prompt);
+    } catch (err) {
+      const msg = err?.message || String(err);
+      console.warn(`[TripGenius] ❌ ${modelName} failed: ${msg}`);
+      errors.push({ model: modelName, error: msg });
+
+      // Only retry next model on retryable errors (503/429/quota)
+      if (!isRetryableError(err)) {
+        // Non-retryable error (bad key, invalid JSON, 404, etc.) — surface immediately
+        if (msg.includes("JSON") || msg.includes("parse")) {
+          throw new Error("INVALID_JSON_RESPONSE");
+        }
+        throw new Error(msg || "NETWORK_OR_API_ERROR");
+      }
+      // Otherwise continue to next model in chain
+    }
+  }
+
+  // All models exhausted
+  console.error("[TripGenius] All models exhausted:", errors);
+  throw new Error("MODELS_EXHAUSTED");
 };

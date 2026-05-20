@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Key, Settings, AlertTriangle, Check, Info, Heart, Compass } from 'lucide-react';
+import { Sparkles, Key, Settings, AlertTriangle, Check, Info, Heart, Compass, Zap } from 'lucide-react';
 import Hero from './components/Hero';
 import TripForm from './components/TripForm';
 import LoadingSkeleton from './components/LoadingSkeleton';
@@ -7,6 +7,7 @@ import ItineraryCard from './components/ItineraryCard';
 import SavedTrips from './components/SavedTrips';
 import { useTrips } from './hooks/useTrips';
 import { generateTravelItinerary } from './utils/gemini';
+import { DEMO_FORM_DATA, DEMO_ITINERARY } from './utils/demoItinerary';
 
 export default function App() {
   const [apiKey, setApiKey] = useState(
@@ -20,6 +21,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+  const [lastFormData, setLastFormData] = useState(null);
   
   const formRef = useRef(null);
   const itineraryRef = useRef(null);
@@ -60,6 +62,7 @@ export default function App() {
     setError(null);
     setActiveItinerary(null);
     setActiveTripId(null);
+    setLastFormData(formData);
     
     // Auto scroll to loading screen
     scrollToItinerary();
@@ -74,6 +77,17 @@ export default function App() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLoadDemo = () => {
+    setError(null);
+    setActiveItinerary({
+      formData: lastFormData || DEMO_FORM_DATA,
+      itineraryData: DEMO_ITINERARY,
+    });
+    setActiveTripId(null);
+    scrollToItinerary();
+    showToast('Loaded demo itinerary (Jaipur, 3 days)');
   };
 
   const handleSaveItinerary = () => {
@@ -240,15 +254,18 @@ export default function App() {
             <div className="max-w-2xl mx-auto glass-panel border-rose-550/20 rounded-2xl p-6 text-center space-y-4">
               <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto animate-bounce" />
               <div>
-                <h3 className="text-lg font-bold text-slate-100">Planning Failed</h3>
+                <h3 className="text-lg font-bold text-slate-100">
+                  {error === 'MODELS_EXHAUSTED' ? 'All AI Models Busy' : 'Planning Failed'}
+                </h3>
                 <p className="text-sm text-slate-400 mt-2 font-medium">
                   {error === 'API_KEY_MISSING' && "Google Gemini API Key is missing or invalid. Please check your settings."}
                   {error === 'INVALID_JSON_RESPONSE' && "The AI engine generated an invalid itinerary layout. Please try planning again."}
                   {error === 'NETWORK_OR_API_ERROR' && "A network error or API limit failure occurred. Please verify your API Key and internet connection."}
-                  {!['API_KEY_MISSING', 'INVALID_JSON_RESPONSE', 'NETWORK_OR_API_ERROR'].includes(error) && error}
+                  {error === 'MODELS_EXHAUSTED' && "Google Gemini is experiencing high demand across all models. You can try again in a moment, or explore a sample demo plan below."}
+                  {!['API_KEY_MISSING', 'INVALID_JSON_RESPONSE', 'NETWORK_OR_API_ERROR', 'MODELS_EXHAUSTED'].includes(error) && error}
                 </p>
               </div>
-              <div className="pt-2">
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
                   onClick={() => {
                     setError(null);
@@ -258,6 +275,15 @@ export default function App() {
                 >
                   Adjust Form & Retry
                 </button>
+                {(error === 'MODELS_EXHAUSTED' || error === 'NETWORK_OR_API_ERROR') && (
+                  <button
+                    onClick={handleLoadDemo}
+                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 border border-indigo-500 text-white text-xs font-semibold flex items-center gap-2 transition-colors shadow-lg shadow-indigo-600/20"
+                  >
+                    <Zap className="w-4 h-4" />
+                    Use Demo Plan
+                  </button>
+                )}
               </div>
             </div>
           )}
